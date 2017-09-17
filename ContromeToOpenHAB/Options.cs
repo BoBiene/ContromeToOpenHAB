@@ -22,6 +22,8 @@ namespace ContromeToOpenHAB
         [Option('h', "houseid", Required = false,DefaultValue =1,  HelpText = "The House-ID in the controme Server to use, default is 1")]
         public int HouseID { get; set; }
 
+        [Option('o', "output", Required = false, DefaultValue = "", HelpText = "Target directory to create the openHAB files in.")]
+        public string OutputDir { get; set; }
 
         [HelpOption]
         public string GetUsage()
