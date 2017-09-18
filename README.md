@@ -30,6 +30,7 @@ Copyright ©  2017
   
   1. HTTP Binding (http://docs.openhab.org/addons/bindings/http1/readme.html)
   2. JsonTransform (http://docs.openhab.org/addons/transformations/jsonpath/readme.html)
-  3. Recommend: Basic UI
+  3. curl accessable via Path (I use http://www.paehl.com/open_source/?CURL_7.55.1)
+  4. Recommend: Basic UI
   
   
