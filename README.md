@@ -1,6 +1,7 @@
 # ContromeToOpenHAB
-Tool to create openHAB Config Files from a Controme Server.
-It will create:
+Tool to create openHAB 2 config files from a Controme Server.
+
+It will automaticly create:
 
 1. A item file containig items to get the current temprature and acces the target temprature for each room
 2. A rule file managing all required proxy items and rules to delgete the set-request to the controme server
