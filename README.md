@@ -32,6 +32,26 @@ Copyright ©  2017
   --help            Display this help screen.
   ```
   
+## Example
+   
+```
+ContromeToOpenHAB.exe -a "192.168.1.10" -u "myuser@mail.de" -p "MyPassword"
+```
+```
+Creating files for floor EG
+Creating entries for  Küche / Esszimmer
+Creating entries for  Wohnzimmer
+Creating entries for  Flur
+Creating entries for  Bad
+Creating files for floor OG
+Creating entries for  Flur
+Creating entries for  Bad
+Creating entries for  Arbeitszimmer
+Creating entries for  Kinderzimmer
+Creating entries for  Schlafzimmer
+Created config files at C:\git\ContromeToOpenHAB\ContromeToOpenHAB\bin\Debug\conf
+```
+  
   ## Requirements
   
   1. HTTP Binding (http://docs.openhab.org/addons/bindings/http1/readme.html)
