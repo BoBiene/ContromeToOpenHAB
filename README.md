@@ -7,6 +7,9 @@ It will automaticly create:
 2. A rule file managing all required proxy items and rules to delgete the set-request to the controme server
 3. A sitemap file
 
+## Download
+https://github.com/BoBiene/ContromeToOpenHAB/releases
+
 ## Usage
 ```
 ContromeToOpenHAB 1.0.0.0
