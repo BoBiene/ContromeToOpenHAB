@@ -25,7 +25,7 @@ namespace ContromeToOpenHAB
         [Option('o', "output", Required = false, DefaultValue = "", HelpText = "Target directory to create the openHAB files in.")]
         public string OutputDir { get; set; }
 
-        [Option('c',"cacheUrl",Required =false,DefaultValue ="controme",HelpText ="The HTTP-Cache-Entry to point to the Controme-Mini-Server. Set to empty to disable.")]
+        [Option('c',"cacheUrl",Required =false,DefaultValue ="controme",HelpText ="The HTTP-Cache-Entry to point to the Controme-Mini-Server (e.g. "http://192.168.10.233/get/json/v1/2/temps/:10000:JSONPATH($". Set to empty to disable.")]
         public string ContromCacheURL { get; set; }
 
         [HelpOption]
