@@ -1,4 +1,4 @@
-# ContromeToOpenHAB
+To# ContromeToOpenHAB
 Tool to create openHAB 2 config files from a Controme Server.
 
 It will automaticly create:
@@ -63,3 +63,11 @@ Created config files at C:\git\ContromeToOpenHAB\ContromeToOpenHAB\bin\Debug\con
   4. Recommend: Basic UI
   
   
+### Cache URL ### 
+The default is to use the http caching of openhab.
+Create a cache entry in the conf/services/http.cfg like:
+
+```
+controme.url=http://<CONTROME_IP>/get/json/v1/1/temps/
+controme.updateInterval=10000
+```
