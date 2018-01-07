@@ -36,15 +36,31 @@ namespace ContromeToOpenHAB
                             request.AddUrlSegment("Method", "temps");
 
                             RestClient client = new RestClient(contromeBaseUrl);
-                            string strCacheUrl = options.ContromCacheURL;
-                            if (string.IsNullOrEmpty(strCacheUrl))
-                                strCacheUrl = $"http://{options.ContromURL}/get/json/v1/{options.HouseID}/temps/";
+                            string strCacheUrlTemp = options.ContromeTempCacheURL;
+                            if (string.IsNullOrEmpty(strCacheUrlTemp))
+                                strCacheUrlTemp = $"http://{options.ContromURL}/get/json/v1/{options.HouseID}/temps/";
 
-                            var response = client.Execute(request);
+                            string strCacheUrlRelay = options.ContromeRelayCacheURL;
+                            if (string.IsNullOrEmpty(strCacheUrlRelay))
+                                strCacheUrlRelay = $"http://{options.ContromURL}/get/json/v1/{options.HouseID}/outs/";
 
-                            JArray json = JArray.Parse(response.Content);
+                            var responseTemps = client.Execute(request);
+                            JArray jsonTemps = JArray.Parse(responseTemps.Content);
 
-                            foreach (JObject floor in json)
+                            IRestResponse responseRelays = null;
+                            JArray jsonRelays = null;
+                            if (options.ReleyStates)
+                            {
+                                request = new RestRequest("get/json/v1/{HouseID}/{Method}");
+                                request.AddUrlSegment("HouseID", options.HouseID.ToString());
+                                request.AddUrlSegment("Method", "outs");
+                                responseRelays = client.Execute(request);
+                                jsonRelays = JArray.Parse(responseRelays.Content);
+
+                            }
+                            else { }
+
+                            foreach (JObject floor in jsonTemps)
                             {
                                 string strFloorName = floor["etagenname"].Value<string>();
 
@@ -54,33 +70,74 @@ namespace ContromeToOpenHAB
                                 string strFloorPrefix = new string(Escape(strFloorName).ToArray()) + "_";
                                 JArray rooms = floor["raeume"].Value<JArray>();
 
+                                Dictionary<string, JToken> relayState = null;
+
+                                if (options.ReleyStates)
+                                {
+
+                                    relayState = jsonRelays
+                                        .Where((o) => o["etagenname"].Value<string>() == strFloorName)
+                                        .SelectMany((o) => o["raeume"].Value<JArray>())
+                                        .ToDictionary((o) => o["id"].Value<string>());
+                                }
+                                else { }
+
                                 foreach (var room in rooms)
                                 {
                                     string strRoomName = room["name"].Value<string>();
+                                    
                                     string strRoomID = room["id"].Value<string>();
                                     string strEscapedName = strFloorPrefix + new string(Escape(strRoomName).ToArray());
 
                                     Console.WriteLine("Creating entries for  " + strRoomName);
 
-                                    itemsFile.WriteLine($"String Controme_Raw_{strEscapedName} {{http = \"<[{strCacheUrl}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})].temperatur)]\"}}");
-                                    itemsFile.WriteLine($"String Controme_Raw_{strEscapedName}_Soll {{http = \"<[{strCacheUrl}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})].solltemperatur)]\"}}");
+                                    itemsFile.WriteLine($"String Controme_Raw_{strEscapedName} {{http = \"<[{strCacheUrlTemp}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})].temperatur)]\"}}");
+                                    itemsFile.WriteLine($"String Controme_Raw_{strEscapedName}_Soll {{http = \"<[{strCacheUrlTemp}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})].solltemperatur)]\"}}");
 
                                     itemsFile.WriteLine($"Group g{strEscapedName}Thermostat \"{strRoomName}\" (gFF) [ \"Thermostat\" ]");
                                     itemsFile.WriteLine($"Number Controme_Proxy_{strEscapedName} \"{strRoomName} [% .2f °C]\"  (g{strEscapedName}Thermostat) [ \"CurrentTemperature\" ]");
                                     itemsFile.WriteLine($"Number Controme_Proxy_{strEscapedName}_Soll \"{strRoomName} Soll[% .1f °C]\"  (g{strEscapedName}Thermostat) [ \"TargetTemperature\" ]");
                                     itemsFile.WriteLine();
 
-
-
                                     rulesFile.WriteLine($"rule \"Unpack JSON Value {strEscapedName}\" when System started or Item Controme_Raw_{strEscapedName} changed then ContromeUnpackJsonArray.apply(Controme_Proxy_{strEscapedName}, Controme_Raw_{strEscapedName}) end");
                                     rulesFile.WriteLine($"rule \"Unpack JSON Value {strEscapedName}_Soll\" when System started or Item Controme_Raw_{strEscapedName}_Soll changed then ContromeUnpackJsonArray.apply(Controme_Proxy_{strEscapedName}_Soll, Controme_Raw_{strEscapedName}_Soll) end");
                                     rulesFile.WriteLine($"rule \"Delegate Set - {strEscapedName}\" when Item Controme_Proxy_{strEscapedName}_Soll received command then executeCommandLine(\"curl -X POST -F user={options.Username} -F password={options.Password} -F soll=\"+receivedCommand.toString+\" http://{options.ContromURL}/set/json/v1/{options.HouseID}/soll/{strRoomID}/\") end ");
-                                    rulesFile.WriteLine();
-
 
                                     sitemapFile.WriteLine($"Text item=Controme_Proxy_{strEscapedName} icon=\"TemperaturSensor\"");
                                     sitemapFile.WriteLine($"Setpoint item=Controme_Proxy_{strEscapedName}_Soll step=0.5 minValue=15 maxValue=26 icon=\"TemperaturSensor\"");
-                                }
+
+                                    if (options.ReleyStates && relayState.ContainsKey(strRoomID))
+                                    {
+                                        var outs = relayState[strRoomID];
+
+                                        var ausgang = outs["ausgang"];
+
+                                        foreach (JProperty token in ausgang)
+                                        {
+                                            Console.Write("Ausgang {0} = {1}", token.Name, token.Value.Value<int>());
+                                            var strJpath = $"$..raeume[?(@.id=={strRoomID})].ausgang.['{token.Name}']";
+                                            var strRelayName = $"{strEscapedName}_Relay_{token.Name.Trim()}";
+                                            var strRawRelayItemName = $"Controme_Raw_" + strRelayName;
+                                            var strProxyRelayItemName = $"Controme_Proxy_" + strRelayName;
+
+                                            itemsFile.WriteLine($"String {strRawRelayItemName} {{http = \"<[{strCacheUrlRelay}:10000:JSONPATH({strJpath})]\"}}");
+                                            itemsFile.WriteLine($"Switch {strProxyRelayItemName} \"{strRoomName} Ausgang {token.Name.Trim()} [%s]\" <fire>");
+
+                                            rulesFile.WriteLine($"rule \"Unpack JSON Value {strRelayName}\" when System started or Item {strRawRelayItemName} changed then ContromeUnpackJsonArraySwitch.apply({strProxyRelayItemName}, {strRawRelayItemName}) end");
+                                            itemsFile.WriteLine();
+
+                                            sitemapFile.WriteLine($"Text item={strProxyRelayItemName}");
+
+                                        }
+
+                                    }
+                                    else { }
+
+                                    rulesFile.WriteLine();
+
+
+
+                                   }
 
                                 sitemapFile.WriteLine("}");
                             }
@@ -158,6 +215,21 @@ NumberItem RuleProxyItem, StringItem RuleReadJson |
     postUpdate(RuleProxyItem, unpackedValue);
 ]");
             writer.WriteLine();
+            writer.Write(@"
+val Functions.Function2 ContromeUnpackJsonArraySwitch = [
+SwitchItem RuleProxyItem, StringItem RuleReadJson |
+	var jsonValue = RuleReadJson.state.toString;
+    var unpackedValue = jsonValue.substring(1, jsonValue.length() - 1);
+    if(unpackedValue == ""1"")
+    {
+        RuleProxyItem.sendCommand(ON);
+    }
+    else
+    {
+        RuleProxyItem.sendCommand(OFF);
+    }
+]");
+            writer.WriteLine();
             writer.WriteLine();
             return writer;
         }
@@ -177,7 +249,7 @@ NumberItem RuleProxyItem, StringItem RuleReadJson |
         {
             var writer = CreateConfigFile(options, "sitemaps\\controme.sitemap");
 
-            writer.WriteLine("sitemap default label=\"Controme\" icon=\"heating\" {");
+            writer.WriteLine("sitemap controme label=\"Controme\" icon=\"heating\" {");
 
             return writer;
         }
