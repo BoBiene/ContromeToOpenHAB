@@ -1,4 +1,4 @@
-# ContromeToOpenHAB
+To# ContromeToOpenHAB
 Tool to create openHAB 2 config files from a Controme Server.
 
 It will automaticly create:
@@ -6,6 +6,9 @@ It will automaticly create:
 1. A item file containig items to get the current temprature and acces the target temprature for each room
 2. A rule file managing all required proxy items and rules to delgete the set-request to the controme server
 3. A sitemap file
+
+## Download
+https://github.com/BoBiene/ContromeToOpenHAB/releases
 
 ## Usage
 ```
@@ -60,3 +63,12 @@ Created config files at C:\git\ContromeToOpenHAB\ContromeToOpenHAB\bin\Debug\con
   4. Recommend: Basic UI
   
   
+### Cache URL ### 
+The default is to use the http caching of openhab.
+Create a cache entry in the conf/services/http.cfg like:
+
+```
+controme.url=http://<CONTROME_IP>/get/json/v1/1/temps/
+controme.updateInterval=10000
+```
+See the openHAB doc: https://docs.openhab.org/addons/bindings/http1/readme.html#example-of-how-to-configure-an-http-cache-item

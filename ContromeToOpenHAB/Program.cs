@@ -95,8 +95,8 @@ namespace ContromeToOpenHAB
                                     itemsFile.WriteLine($"String Controme_Raw_{strEscapedName}_Soll {{http = \"<[{strCacheUrlTemp}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})].solltemperatur)]\"}}");
 
                                     itemsFile.WriteLine($"Group g{strEscapedName}Thermostat \"{strRoomName}\" (gFF) [ \"Thermostat\" ]");
-                                    itemsFile.WriteLine($"Number Controme_Proxy_{strEscapedName} \"{strRoomName} [% .2f °C]\"  (g{strEscapedName}Thermostat) [ \"CurrentTemperature\" ]");
-                                    itemsFile.WriteLine($"Number Controme_Proxy_{strEscapedName}_Soll \"{strRoomName} Soll[% .1f °C]\"  (g{strEscapedName}Thermostat) [ \"TargetTemperature\" ]");
+                                    itemsFile.WriteLine($"Number Controme_Proxy_{strEscapedName} \"{strRoomName} [% .2f] °C\"  (g{strEscapedName}Thermostat) [ \"CurrentTemperature\" ]");
+                                    itemsFile.WriteLine($"Number Controme_Proxy_{strEscapedName}_Soll \"{strRoomName} Soll[% .1f] °C\"  (g{strEscapedName}Thermostat) [ \"TargetTemperature\" ]");
                                     itemsFile.WriteLine();
 
                                     rulesFile.WriteLine($"rule \"Unpack JSON Value {strEscapedName}\" when System started or Item Controme_Raw_{strEscapedName} changed then ContromeUnpackJsonArray.apply(Controme_Proxy_{strEscapedName}, Controme_Raw_{strEscapedName}) end");
