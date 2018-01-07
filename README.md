@@ -39,8 +39,8 @@ Copyright ©  2017
 
   -r, --relay        (Default: True) Generates relay states
 
-  --help             Display this help screen.  ```
-  
+  --help             Display this help screen.
+```  
 ## Example
    
 ```
