@@ -12,29 +12,35 @@ https://github.com/BoBiene/ContromeToOpenHAB/releases
 
 ## Usage
 ```
-ContromeToOpenHAB 1.0.0.0
+ContromeToOpenHAB 1.1.6581.19865
 Copyright ©  2017
 
-  -a, --addr        Required. The IP-Address oder DNS name of the
-                    Controme-Mini-Server (e.g 192.168.1.100 or contromeServer)
+  -a, --addr         Required. The IP-Address oder DNS name of the
+                     Controme-Mini-Server (e.g 192.168.1.100 or contromeServer)
 
-  -u, --user        Required. The UserName openHAB will use to set Values
+  -u, --user         Required. The UserName openHAB will use to set Values
 
-  -p, --password    Required. The Password for the User (Hint: the password is
-                    stored in plain text in the config-File)
+  -p, --password     Required. The Password for the User (Hint: the password is
+                     stored in plain text in the config-File)
 
-  -h, --houseid     (Default: 1) The House-ID in the Controme Server to use,
-                    default is 1
+  -h, --houseid      (Default: 1) The House-ID in the Controme Server to use,
+                     default is 1
 
-  -o, --output      (Default: ) Target directory to create the openHAB files
-                    in.
+  -o, --output       (Default: ) Target directory to create the openHAB files
+                     in.
 
-  -c, --cacheUrl    (Default: controme) The HTTP-Cache-Entry to point to the
-                    Controme-Mini-Server. Set to empty to disable.
+  --cacheUrlTemp     (Default: controme) The HTTP-Cache-Entry to point to the
+                     Controme-Mini-Server for Temprature. Set to empty to
+                     disable.
 
-  --help            Display this help screen.
-  ```
-  
+  --cacheUrlRelay    (Default: contromeRelays) The HTTP-Cache-Entry to point to
+                     the Controme-Mini-Server for Relay-States. Set to empty to
+                     disable.
+
+  -r, --relay        (Default: True) Generates relay states
+
+  --help             Display this help screen.
+```  
 ## Example
    
 ```
@@ -65,10 +71,12 @@ Created config files at C:\git\ContromeToOpenHAB\ContromeToOpenHAB\bin\Debug\con
   
 ### Cache URL ### 
 The default is to use the http caching of openhab.
-Create a cache entry in the conf/services/http.cfg like:
+Create two cache entries in the conf/services/http.cfg like:
 
 ```
 controme.url=http://<CONTROME_IP>/get/json/v1/1/temps/
 controme.updateInterval=10000
+contromeRelays.url=http://<CONTROME_IP>/get/json/v1/1/outs/
+contromeRelays.updateInterval=10000
 ```
 See the openHAB doc: https://docs.openhab.org/addons/bindings/http1/readme.html#example-of-how-to-configure-an-http-cache-item
