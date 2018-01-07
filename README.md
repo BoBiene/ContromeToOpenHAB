@@ -71,3 +71,4 @@ Create a cache entry in the conf/services/http.cfg like:
 controme.url=http://<CONTROME_IP>/get/json/v1/1/temps/
 controme.updateInterval=10000
 ```
+See the openHAB doc: https://docs.openhab.org/addons/bindings/http1/readme.html#example-of-how-to-configure-an-http-cache-item
