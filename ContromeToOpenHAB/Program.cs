@@ -211,16 +211,14 @@ import org.eclipse.xtext.xbase.lib.Functions
 val Functions.Function2 ContromeUnpackJsonArray = [
 NumberItem RuleProxyItem, StringItem RuleReadJson |
 	var jsonValue = RuleReadJson.state.toString;
-    var unpackedValue = jsonValue.substring(1, jsonValue.length() - 1);
-    postUpdate(RuleProxyItem, unpackedValue);
+        postUpdate(RuleProxyItem, jsonValue);
 ]");
             writer.WriteLine();
             writer.Write(@"
 val Functions.Function2 ContromeUnpackJsonArraySwitch = [
 SwitchItem RuleProxyItem, StringItem RuleReadJson |
 	var jsonValue = RuleReadJson.state.toString;
-    var unpackedValue = jsonValue.substring(1, jsonValue.length() - 1);
-    if(unpackedValue == ""1"")
+    if(jsonValue == ""1"")
     {
         RuleProxyItem.sendCommand(ON);
     }
