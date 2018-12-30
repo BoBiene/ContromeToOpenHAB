@@ -1,4 +1,4 @@
-To# ContromeToOpenHAB
+# ContromeToOpenHAB
 Tool to create openHAB 2 config files from a Controme Server.
 
 It will automaticly create:
