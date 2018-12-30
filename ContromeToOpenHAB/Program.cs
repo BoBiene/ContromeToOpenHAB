@@ -204,28 +204,24 @@ namespace ContromeToOpenHAB
         private static StreamWriter CreateRules(Options options)
         {
             var writer = CreateConfigFile(options, "rules\\controme.rules");
-            writer.Write(@"import org.eclipse.smarthome.core.library.items.NumberItem
-import org.eclipse.smarthome.core.library.items.StringItem
-import org.eclipse.xtext.xbase.lib.Functions
-
-val Functions.Function2 ContromeUnpackJsonArray = [
-NumberItem RuleProxyItem, StringItem RuleReadJson |
+            writer.Write(@"val Functions$Function2<NumberItem,StringItem,String> ContromeUnpackJsonArray = [
+ RuleProxyItem,  RuleReadJson |
 	var jsonValue = RuleReadJson.state.toString;
         postUpdate(RuleProxyItem, jsonValue);
 ]");
             writer.WriteLine();
             writer.Write(@"
-val Functions.Function2 ContromeUnpackJsonArraySwitch = [
-SwitchItem RuleProxyItem, StringItem RuleReadJson |
+val Functions$Function2<SwitchItem,StringItem,String> ContromeUnpackJsonArraySwitch = [
+ RuleProxyItem,  RuleReadJson |
 	var jsonValue = RuleReadJson.state.toString;
     if(jsonValue == ""1"")
     {
-        RuleProxyItem.sendCommand(ON);
-    }
+                RuleProxyItem.sendCommand(ON);
+            }
     else
     {
-        RuleProxyItem.sendCommand(OFF);
-    }
+                RuleProxyItem.sendCommand(OFF);
+            }
 ]");
             writer.WriteLine();
             writer.WriteLine();
