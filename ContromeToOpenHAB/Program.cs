@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using ContromeToOpenHAB.JSON;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -60,6 +61,8 @@ namespace ContromeToOpenHAB
                             }
                             else { }
 
+                            
+                             
                             foreach (JObject floor in jsonTemps)
                             {
                                 string strFloorName = floor["etagenname"].Value<string>();
@@ -87,12 +90,29 @@ namespace ContromeToOpenHAB
                                     string strRoomName = room["name"].Value<string>();
                                     
                                     string strRoomID = room["id"].Value<string>();
+
+                                    request = new RestRequest("get/json/v1/{HouseID}/{Method}/{Room}");
+                                    request.AddUrlSegment("HouseID", options.HouseID.ToString());
+                                    request.AddUrlSegment("Method", "rltemps");
+                                    request.AddUrlSegment("Room", strRoomID);
+
+
+                                    var ContromeRlTempResponse = client.Execute<List<ContromeRlTemp>>(request);
+
                                     string strEscapedName = strFloorPrefix + new string(Escape(strRoomName).ToArray());
 
                                     Console.WriteLine("Creating entries for  " + strRoomName);
 
-                                    itemsFile.WriteLine($"String Controme_Raw_{strEscapedName} {{http = \"<[{strCacheUrlTemp}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})].temperatur)]\"}}");
-                                    itemsFile.WriteLine($"String Controme_Raw_{strEscapedName}_Soll {{http = \"<[{strCacheUrlTemp}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})].solltemperatur)]\"}}");
+                                    itemsFile.WriteLine($"Number Controme_Raw_{strEscapedName} {{http = \"<[{strCacheUrlTemp}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})].temperatur)]\"}}");
+                                    itemsFile.WriteLine($"Number Controme_Raw_{strEscapedName}_Soll {{http = \"<[{strCacheUrlTemp}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})].solltemperatur)]\"}}");
+
+                                    int rlTempSensor = 1;
+                                    foreach(var rlTemp in ContromeRlTempResponse.Data)
+                                    {
+                                        itemsFile.WriteLine($"Number Controme_{strEscapedName}_RL_{rlTempSensor} \"{strRoomName} Rücklauf #{rlTempSensor} [% .2f] °C\" {{http = \"<[{strCacheUrlTemp}:10000:JSONPATH($..raeume[?(@.id=={strRoomID})]..sensoren[?(@.name=='{rlTemp.Name}')].wert)]\"}}");
+                                        rlTempSensor += 1;
+                                    }
+
 
                                     itemsFile.WriteLine($"Group g{strEscapedName}Thermostat \"{strRoomName}\" (gFF) [ \"Thermostat\" ]");
                                     itemsFile.WriteLine($"Number Controme_Proxy_{strEscapedName} \"{strRoomName} [% .2f] °C\"  (g{strEscapedName}Thermostat) [ \"CurrentTemperature\" ]");
@@ -120,7 +140,7 @@ namespace ContromeToOpenHAB
                                             var strRawRelayItemName = $"Controme_Raw_" + strRelayName;
                                             var strProxyRelayItemName = $"Controme_Proxy_" + strRelayName;
 
-                                            itemsFile.WriteLine($"String {strRawRelayItemName} {{http = \"<[{strCacheUrlRelay}:10000:JSONPATH({strJpath})]\"}}");
+                                            itemsFile.WriteLine($"Number {strRawRelayItemName} {{http = \"<[{strCacheUrlRelay}:10000:JSONPATH({strJpath})]\"}}");
                                             itemsFile.WriteLine($"Switch {strProxyRelayItemName} \"{strRoomName} Ausgang {token.Name.Trim()} [%s]\" <fire>");
 
                                             rulesFile.WriteLine($"rule \"Unpack JSON Value {strRelayName}\" when System started or Item {strRawRelayItemName} changed then ContromeUnpackJsonArraySwitch.apply({strProxyRelayItemName}, {strRawRelayItemName}) end");
