@@ -3,17 +3,15 @@ Tool to create openHAB 3 config files from a Controme Server.
 
 It will automaticly create:
 
-1. A things file containig the configuration for the HTTP binding to 
-    a. read the current temprature 
-    b. read and write the target temprature 
-    c. read the releay states
-    d. read and write external sensors (temprature and humidity)
-    e. read virtual sensors
-    f. read return flow sensors
-2. A items file with configuration for the thermostat groups used for the alexa binding
-3. A sitemap file
-
-## Tool requi
+    1. A things file containig the configuration for the HTTP binding to 
+        a. read the current temprature 
+        b. read and write the target temprature 
+        c. read the releay states
+        d. read and write external sensors (temprature and humidity)
+        e. read virtual sensors
+        f. read return flow sensors
+    2. A items file with configuration for the thermostat groups used for the alexa binding
+    3. A sitemap file
 
 ## Usage
 ```
