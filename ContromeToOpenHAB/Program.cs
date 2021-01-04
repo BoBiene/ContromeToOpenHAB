@@ -129,6 +129,12 @@ namespace ContromeToOpenHAB
                                     else
                                         Debugger.Break();
 
+
+                                    itemsFile.WriteLine($"Group g{strEscapedName}Thermostat \"{strRoomName}\" <heating> [\"RadiatorControl\"] {{alexa = \"Endpoint.Thermostat\"}}");
+                                    itemsFile.WriteLine($"Number:Temperature Controme_{strEscapedName} \"{strRoomName}\" <temperature> (g{strEscapedName}Thermostat) [\"Point\",\"Temperature\"] {{channel=\"{thingId}:{strEscapedName}\",alexa=\"TemperatureSensor.temperature\" }}");
+                                    itemsFile.WriteLine($"Number:Temperature Controme_{strEscapedName}_setpoint \"{strRoomName} Soll\" <temperature> (g{strEscapedName}Thermostat) [\"Point\",\"Temperature\"] {{channel=\"{thingId}:{strEscapedName}_setpoint\",alexa=\"TemperatureSensor.targetSetpoint\" }}");
+
+
                                     var rlIds = ContromeRlTempResponse.Data.Select((r) => r.Name).ToHashSet();
 
                                     var sensors = room["sensoren"] as JArray;
@@ -147,7 +153,7 @@ namespace ContromeToOpenHAB
                                             string strSensorName = $"sensor{i}";
                                             bool blnIsExternalTemp = options.ExternalTempSensorIds.Any(externalSensorId => sensorId.StartsWith(externalSensorId, StringComparison.InvariantCultureIgnoreCase));
                                             bool blnIsExternalHumidity = options.ExternalHumiditySensorIds.Any(externalSensorId => sensorId.StartsWith(externalSensorId, StringComparison.InvariantCultureIgnoreCase));
-
+                                            string strUnit = "Temperature";
                                             if (rlIds.Contains(sensorId))
                                             {
                                                 strSensorDescription = $"{strRoomName} Rücklauf #{nRL}";
@@ -171,6 +177,7 @@ namespace ContromeToOpenHAB
                                             {
                                                 strSensorDescription = $"{strRoomName} external Humidity";
                                                 strSensorName = $"ext_humi_{nExternalHum++}";
+                                                strUnit = "Humidity";
                                             }
                                             else if (!string.IsNullOrWhiteSpace(strSensorDescription))
                                             {
@@ -194,17 +201,16 @@ namespace ContromeToOpenHAB
                                             }
 
                                             thingsFile.WriteLine("] ");
+
+                                            itemsFile.WriteLine($"Number:{((blnIsExternalHumidity) ? "Dimensionless" : "Temperature")} Controme_{strEscapedName}_{strSensorName} \"{strSensorDescription}\" <{strUnit.ToLower()}> (g{strEscapedName}Thermostat) [\"Measurement\",\"{strUnit}\"] {{channel=\"{thingId}:{strEscapedName}_{strSensorName}\"}}");
                                         }
                                     }
                                     else { }
 
 
 
-                                    itemsFile.WriteLine($"Group g{strEscapedName}Thermostat \"{strRoomName}\" {{alexa = \"Endpoint.Thermostat\"}}");
-                                    itemsFile.WriteLine($"Number:Temperature Controme_{strEscapedName} \"{strRoomName} [% .2f] °C\"  (g{strEscapedName}Thermostat) {{channel=\"{thingId}:{strEscapedName}\",alexa=\"TemperatureSensor.temperature\" }}");
-                                    itemsFile.WriteLine($"Number:Temperature Controme_{strEscapedName}_setpoint \"{strRoomName} Soll[% .1f] °C\"  (g{strEscapedName}Thermostat) {{channel=\"{thingId}:{strEscapedName}_setpoint\",alexa=\"TemperatureSensor.targetSetpoint\" }}");
-
-                                    itemsFile.WriteLine();
+                                    
+                                    
 
                                     sitemapFile.WriteLine($"Text item=Controme_{strEscapedName} icon=\"TemperaturSensor\"");
                                     sitemapFile.WriteLine($"Setpoint item=Controme_{strEscapedName}_Soll step=0.5 minValue=15 maxValue=26 icon=\"TemperaturSensor\"");
@@ -220,15 +226,15 @@ namespace ContromeToOpenHAB
                                             Console.WriteLine("Ausgang {0} = {1}", token.Name, token.Value.Value<int>());
                                             strJpath = $"$..raeume[?(@.id=={strRoomID})].ausgang.['{token.Name}']";
                                             var strRelayName = $"{strEscapedName}_Relay_{token.Name.Trim()}";
-                                            var strRawRelayItemName = $"Controme_Raw_" + strRelayName;
-                                            var strProxyRelayItemName = $"Controme_Proxy_" + strRelayName;
 
                                             if (IsJPathValid(jsonRelays, strJpath))
                                             {
-                                                thingsFile.WriteLine($"\t\tType contact : {strRelayName} \"{strRoomName} Ausgang {token.Name.Trim()} \" [stateExtension=\"{strGetOuts}\", stateTransformation=\"JSONPATH:{strJpath}\",openValue=\"1\",closedValue=\"0\", mode=\"READONLY\" ] ");
-                                                itemsFile.WriteLine();
+                                                thingsFile.WriteLine($"\t\tType contact : {strRelayName} \"{strRoomName} Ausgang {token.Name.Trim()}\" [stateExtension=\"{strGetOuts}\", stateTransformation=\"JSONPATH:{strJpath}\",openValue=\"1\",closedValue=\"0\", mode=\"READONLY\" ] ");
+                                                
 
-                                                sitemapFile.WriteLine($"Text item={strProxyRelayItemName}");
+                                                itemsFile.WriteLine($"Contact Controme_{strRelayName} \"{strRoomName} Ausgang {token.Name.Trim()}\" <fire> (g{strEscapedName}Thermostat) [\"OpenState\"] {{channel=\"{thingId}:{strRelayName}\"}}");
+
+                                                sitemapFile.WriteLine($"Text item=Controme_{strRelayName}");
                                             }
                                             else
                                             {
@@ -238,6 +244,8 @@ namespace ContromeToOpenHAB
 
                                     }
                                     else { }
+
+                                    itemsFile.WriteLine();
                                 }
 
                                 sitemapFile.WriteLine("}");
