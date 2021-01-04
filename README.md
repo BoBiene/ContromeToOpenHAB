@@ -1,51 +1,62 @@
 # ContromeToOpenHAB
-Tool to create openHAB 2 config files from a Controme Server.
+Tool to create openHAB 3 config files from a Controme Server.
 
 It will automaticly create:
 
-1. A item file containig items to get the current temprature and acces the target temprature for each room
-2. A rule file managing all required proxy items and rules to delgete the set-request to the controme server
-3. A sitemap file
-
-## Download
-https://github.com/BoBiene/ContromeToOpenHAB/releases
+    1. A things file containig the configuration for the HTTP binding to 
+        a. read the current temprature 
+        b. read and write the target temprature 
+        c. read the releay states
+        d. read and write external sensors (temprature and humidity)
+        e. read virtual sensors
+        f. read return flow sensors
+    2. A items file with configuration for the thermostat groups used for the alexa binding
+    3. A sitemap file
 
 ## Usage
 ```
-ContromeToOpenHAB 1.1.6581.19865
-Copyright ©  2017
+ContromeToOpenHAB 1.4.0-beta
+Copyright (C) 2021 ContromeToOpenHAB
 
-  -a, --addr         Required. The IP-Address oder DNS name of the
-                     Controme-Mini-Server (e.g 192.168.1.100 or contromeServer)
+ERROR(S):
+  Required option 'a, addr' is missing.
+  Required option 'u, user' is missing.
+  Required option 'p, password' is missing.
 
-  -u, --user         Required. The UserName openHAB will use to set Values
+  -a, --addr                 Required. The IP-Address oder DNS name of the Controme-Mini-Server (e.g 192.168.1.100 or contromeServer)
 
-  -p, --password     Required. The Password for the User (Hint: the password is
-                     stored in plain text in the config-File)
+  -u, --user                 Required. The UserName openHAB will use to set Values
 
-  -h, --houseid      (Default: 1) The House-ID in the Controme Server to use,
-                     default is 1
+  -p, --password             Required. The Password for the User (Hint: the password is stored in plain text in the config-File)
 
-  -o, --output       (Default: ) Target directory to create the openHAB files
-                     in.
+  -h, --houseid              (Default: 1) The House-ID in the Controme Server to use, default is 1
 
-  --cacheUrlTemp     (Default: controme) The HTTP-Cache-Entry to point to the
-                     Controme-Mini-Server for Temprature. Set to empty to
-                     disable.
+  -o, --output               (Default: ) Target directory to create the openHAB files in.
 
-  --cacheUrlRelay    (Default: contromeRelays) The HTTP-Cache-Entry to point to
-                     the Controme-Mini-Server for Relay-States. Set to empty to
-                     disable.
+  -r, --relay                (Default: true) Generates relay states
 
-  -r, --relay        (Default: True) Generates relay states
+  -t, --TempSensorIds        List of external temp-sensor-ids. Matching is done by string start.
 
-  --help             Display this help screen.
+  -f, --HumiditySensorIds    List of external temp-sensor-ids. Matching is done by string start.
+
+  --help                     Display this help screen.
+
+  --version                  Display version information.
 ```  
+
 ## Example
-   
+
+### with .NET 5.0
 ```
-ContromeToOpenHAB.exe -a "192.168.1.10" -u "myuser@mail.de" -p "MyPassword"
+ContromeToOpenHAB.exe -a "192.168.1.10" -u "myuser@mail.de" -p "MyPassword" -t "sen-sor-id-1" "sen-sor-id-2" "sen-sor-id-3" -f "sen-sor-id-4" "sen-sor-id-5"
 ```
+
+### with docker 
+
+```
+docker run --rm -v <<PATH_TO_CREATE_FILES>>:/app/conf/ bobiene/controme-to-openhab -a "192.168.1.10" -u "myuser@mail.de" -p "MyPassword" -t "sen-sor-id-1" "sen-sor-id-2" "sen-sor-id-3" -f "sen-sor-id-4" "sen-sor-id-5"
+```
+
 ```
 Creating files for floor EG
 Creating entries for  Küche / Esszimmer
@@ -60,23 +71,12 @@ Creating entries for  Kinderzimmer
 Creating entries for  Schlafzimmer
 Created config files at C:\git\ContromeToOpenHAB\ContromeToOpenHAB\bin\Debug\conf
 ```
-  
-  ## Requirements
-  
-  1. HTTP Binding (http://docs.openhab.org/addons/bindings/http1/readme.html)
-  2. JsonTransform (http://docs.openhab.org/addons/transformations/jsonpath/readme.html)
-  3. curl accessable via Path (I use http://www.paehl.com/open_source/?CURL_7.55.1)
-  4. Recommend: Basic UI
-  
-  
-### Cache URL ### 
-The default is to use the http caching of openhab.
-Create two cache entries in the conf/services/http.cfg like:
 
-```
-controme.url=http://<CONTROME_IP>/get/json/v1/1/temps/
-controme.updateInterval=10000
-contromeRelays.url=http://<CONTROME_IP>/get/json/v1/1/outs/
-contromeRelays.updateInterval=10000
-```
-See the openHAB doc: https://docs.openhab.org/addons/bindings/http1/readme.html#example-of-how-to-configure-an-http-cache-item
+## Requirements
+
+1. HTTP Binding (https://www.openhab.org/addons/bindings/http/)
+2. JsonPath Transform (https://www.openhab.org/addons/transformations/jsonpath/)
+3. Regex Transform (https://www.openhab.org/addons/transformations/regex/)
+    
+  
+
