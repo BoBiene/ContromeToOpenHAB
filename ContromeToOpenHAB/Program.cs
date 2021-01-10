@@ -2,6 +2,7 @@
 using ContromeToOpenHAB.JSON;
 using Newtonsoft.Json.Linq;
 using RestSharp;
+using RestSharp.Authenticators;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -191,7 +192,11 @@ namespace ContromeToOpenHAB
                                             strJpath = $"$..raeume[?(@.id=={strRoomID})]..sensoren[?(@.name=='{sensorId}')].wert";
 
                                             thingsFile.Write($"\t\tType number : {strEscapedName}_{strSensorName} \"{strSensorDescription}\" [stateExtension=\"{strGetTemps}\", stateTransformation=\"JSONPATH:{strJpath}\"");
-                                            if (blnIsExternalTemp || blnIsExternalHumidity)
+                                            if (blnIsExternalTemp)
+                                            {
+                                                thingsFile.Write($", commandExtension=\"set/{sensorId}/temperatur/%2$\", commandTransformation=\"JS:ContromeValue.js\" ");
+                                            }
+                                            else if(blnIsExternalHumidity)
                                             {
                                                 thingsFile.Write($", commandExtension=\"set/{sensorId}/%2$.2f\" ");
                                             }
@@ -256,6 +261,7 @@ namespace ContromeToOpenHAB
                         thingsFile.WriteLine("}");
                     }
                 }
+                CreateJSValueTransform(options);
                 DirectoryInfo confDir = new DirectoryInfo(Path.Combine(options.OutputDir, "conf"));
                 Console.WriteLine("Created config files at " + confDir.FullName);
             }
@@ -311,7 +317,19 @@ namespace ContromeToOpenHAB
                     else
                         yield return '_';
         }
-
+        private static void CreateJSValueTransform(Options options)
+        {
+            using(var file =CreateConfigFile(options,Path.Combine("transform","ContromeValue.js")))
+            {
+                file.Write(@"(function(T) {
+    //https://community.openhab.org/t/controme-smart-heat/26797/22
+    var temp_coarse= Math.floor(T*2)/2;     // T is true measured float temperature value
+    var temp_fine= T-temp_coarse;
+    var value = temp_coarse+ Math.floor(2.0*temp_fine + Math.floor(temp_fine*16) *6.25)/100;
+    return value.toFixed(2);
+})(value)");
+            }
+        }
         private static StreamWriter CreateConfigFile(Options options, string strName)
         {
             string strPath = Path.Combine(options.OutputDir, Path.Combine("conf", strName));
